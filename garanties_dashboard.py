@@ -350,6 +350,79 @@ if amounts:
         )
         st.plotly_chart(fig, use_container_width=True)
 
+# Répartition des mentions de garanties par canal/magasin
+st.markdown('<div class="sub-header">Répartition des Mentions de Garanties par Canal/Magasin</div>', unsafe_allow_html=True)
+
+# Filtrer pour n'avoir que les canaux avec des mentions de garanties
+channel_warranty_df = warranty_df[warranty_df['Source_Channel'] != "Non spécifié"]
+channel_counts = channel_warranty_df['Source_Channel'].value_counts().reset_index()
+channel_counts.columns = ['Canal', 'Nombre de mentions']
+
+# Calculer le score moyen de sentiment par canal
+channel_sentiment = channel_warranty_df.groupby('Source_Channel')['Sentiment'].mean().reset_index()
+channel_sentiment.columns = ['Canal', 'Score moyen']
+
+# Fusionner les deux dataframes
+channel_analysis = pd.merge(channel_counts, channel_sentiment, on='Canal')
+
+# Trier par nombre de mentions décroissant
+channel_analysis = channel_analysis.sort_values('Nombre de mentions', ascending=False)
+
+if len(channel_analysis) > 0:
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Graphique du nombre de mentions par canal
+        fig = px.bar(
+            channel_analysis,
+            y='Canal',
+            x='Nombre de mentions',
+            title="Nombre de mentions de garanties par canal/magasin",
+            orientation='h',
+            color='Nombre de mentions',
+            color_continuous_scale='Blues'
+        )
+        fig.update_layout(yaxis={'categoryorder':'total ascending'})
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with col2:
+        # Graphique du score moyen par canal
+        fig = px.bar(
+            channel_analysis,
+            y='Canal',
+            x='Score moyen',
+            title="Score moyen des garanties par canal/magasin",
+            orientation='h',
+            color='Score moyen',
+            color_continuous_scale='RdYlGn',
+            range_color=[0, 10]
+        )
+        fig.update_layout(yaxis={'categoryorder':'total ascending'})
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Tableau des canaux avec le plus de problèmes de garanties
+    st.markdown("### Détail des canaux avec le plus de mentions de garanties")
+    st.dataframe(channel_analysis, use_container_width=True)
+    
+    # Insights sur les canaux
+    st.markdown('<div class="insight-box">', unsafe_allow_html=True)
+    worst_channel = channel_analysis.sort_values('Score moyen').iloc[0]
+    best_channel = channel_analysis.sort_values('Score moyen', ascending=False).iloc[0]
+    most_mentions = channel_analysis.sort_values('Nombre de mentions', ascending=False).iloc[0]
+    
+    st.markdown(f"""
+    ### Insights par canal/magasin
+    
+    - Le canal avec le plus de mentions de garanties est **{most_mentions['Canal']}** ({most_mentions['Nombre de mentions']} mentions)
+    - Le canal avec le score le plus bas sur les garanties est **{worst_channel['Canal']}** (score de {worst_channel['Score moyen']:.2f}/10)
+    - Le canal avec le meilleur score sur les garanties est **{best_channel['Canal']}** (score de {best_channel['Score moyen']:.2f}/10)
+    
+    Cette analyse permet d'identifier les canaux où les problèmes de garanties sont les plus fréquents et les plus sévères.
+    """)
+    st.markdown('</div>', unsafe_allow_html=True)
+else:
+    st.info("Pas assez de données pour analyser la répartition par canal/magasin.")
+
 # Extensions de garantie
 st.markdown('<div class="sub-header">Focus sur les Extensions de Garantie</div>', unsafe_allow_html=True)
 
@@ -489,79 +562,6 @@ else:
     display_df = warranty_df[['Id', 'Title', 'Description', 'Sentiment', 'Categories', 'CreatedAt']]
 
 st.dataframe(display_df, use_container_width=True)
-
-# Répartition des mentions de garanties par canal/magasin
-st.markdown('<div class="sub-header">Répartition des Mentions de Garanties par Canal/Magasin</div>', unsafe_allow_html=True)
-
-# Filtrer pour n'avoir que les canaux avec des mentions de garanties
-channel_warranty_df = warranty_df[warranty_df['Source_Channel'] != "Non spécifié"]
-channel_counts = channel_warranty_df['Source_Channel'].value_counts().reset_index()
-channel_counts.columns = ['Canal', 'Nombre de mentions']
-
-# Calculer le score moyen de sentiment par canal
-channel_sentiment = channel_warranty_df.groupby('Source_Channel')['Sentiment'].mean().reset_index()
-channel_sentiment.columns = ['Canal', 'Score moyen']
-
-# Fusionner les deux dataframes
-channel_analysis = pd.merge(channel_counts, channel_sentiment, on='Canal')
-
-# Trier par nombre de mentions décroissant
-channel_analysis = channel_analysis.sort_values('Nombre de mentions', ascending=False)
-
-if len(channel_analysis) > 0:
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        # Graphique du nombre de mentions par canal
-        fig = px.bar(
-            channel_analysis,
-            y='Canal',
-            x='Nombre de mentions',
-            title="Nombre de mentions de garanties par canal/magasin",
-            orientation='h',
-            color='Nombre de mentions',
-            color_continuous_scale='Blues'
-        )
-        fig.update_layout(yaxis={'categoryorder':'total ascending'})
-        st.plotly_chart(fig, use_container_width=True)
-    
-    with col2:
-        # Graphique du score moyen par canal
-        fig = px.bar(
-            channel_analysis,
-            y='Canal',
-            x='Score moyen',
-            title="Score moyen des garanties par canal/magasin",
-            orientation='h',
-            color='Score moyen',
-            color_continuous_scale='RdYlGn',
-            range_color=[0, 10]
-        )
-        fig.update_layout(yaxis={'categoryorder':'total ascending'})
-        st.plotly_chart(fig, use_container_width=True)
-    
-    # Tableau des canaux avec le plus de problèmes de garanties
-    st.markdown("### Détail des canaux avec le plus de mentions de garanties")
-    st.dataframe(channel_analysis, use_container_width=True)
-    
-    # Insights sur les canaux
-    st.markdown('<div class="insight-box">', unsafe_allow_html=True)
-    worst_channel = channel_analysis.sort_values('Score moyen').iloc[0]
-    best_channel = channel_analysis.sort_values('Score moyen', ascending=False).iloc[0]
-    most_mentions = channel_analysis.sort_values('Nombre de mentions', ascending=False).iloc[0]
-    
-    st.markdown(f"""
-    ### Insights par canal/magasin
-    
-    - Le canal avec le plus de mentions de garanties est **{most_mentions['Canal']}** ({most_mentions['Nombre de mentions']} mentions)
-    - Le canal avec le score le plus bas sur les garanties est **{worst_channel['Canal']}** (score de {worst_channel['Score moyen']:.2f}/10)
-    - Le canal avec le meilleur score sur les garanties est **{best_channel['Canal']}** (score de {best_channel['Score moyen']:.2f}/10)
-    
-    Cette analyse permet d'identifier les canaux où les problèmes de garanties sont les plus fréquents et les plus sévères.
-    """)
-    st.markdown('</div>', unsafe_allow_html=True)
-else:
-    st.info("Pas assez de données pour analyser la répartition par canal/magasin.")
 
 # Footer
 st.markdown("---")
