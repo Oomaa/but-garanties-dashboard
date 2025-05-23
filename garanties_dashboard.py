@@ -4,8 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.graph_objects as go
-from wordcloud import WordCloud
-from collections import Counter
 import re
 
 # Configuration de la page
@@ -416,44 +414,6 @@ with col2:
     - **97,93%** des problèmes de garantie sont associés au Service SAV, créant un cercle vicieux d'insatisfaction
     """)
     st.markdown('</div>', unsafe_allow_html=True)
-
-# Nuage de mots
-st.markdown("### Mots les plus fréquents dans les feedbacks sur les garanties")
-
-# Concaténer tous les textes sur les garanties
-warranty_text = ' '.join(warranty_df['Description'].dropna())
-warranty_text = warranty_text.lower()
-
-# Liste des mots à ignorer
-stop_words = ['le', 'la', 'les', 'de', 'du', 'des', 'un', 'une', 'et', 'est', 'en', 'que', 'qui', 'pour', 'pas', 'sur', 
-             'avec', 'sans', 'mais', 'ou', 'où', 'donc', 'car', 'au', 'aux', 'ce', 'ces', 'cette', 'son', 'sa', 'ses', 
-             'mon', 'ma', 'mes', 'ton', 'ta', 'tes', 'il', 'elle', 'ils', 'elles', 'nous', 'vous', 'leur', 'leurs', 
-             'se', 'par', 'plus', 'très', 'tout', 'tous', 'toute', 'toutes', 'autre', 'autres', 'même', 'si', 'ainsi', 
-             'alors', 'avant', 'après', 'sous', 'dans', 'entre', 'vers', 'chez', 'je', 'tu', 'il', 'elle', 'on', 'nous', 
-             'vous', 'ils', 'elles', 'me', 'te', 'se', 'à', 'ont', 'eu', 'été', 'être', 'avoir', 'fait', 'faire', 'fois', 
-             'comme', 'quand', 'puis', 'dont', 'cela', 'ne', 'ni', 'notre', 'votre', 'peu', 'beaucoup', 'trop', 'aussi', 
-             'bien', 'mal', 'jamais', 'toujours', 'souvent', 'encore', 'déjà', 'moins', 'plus', 'jour', 'mois', 'an', 
-             'année', 'semaine', 'heure', 'minute', 'seconde', 'temps', 'depuis', 'pendant', 'jusque', 'jusqu\'à', 'qu\'il', 
-             'qu\'elle', 'qu\'ils', 'qu\'elles', 'c\'est', 'j\'ai', 'n\'est', 'd\'un', 'd\'une', 's\'est', 'qu\'on',
-             'garantie', 'assurance', 'extension', 'couverture', 'garanti', 'assur']
-
-words = re.findall(r'\b\w+\b', warranty_text)
-word_freq = Counter([word for word in words if word not in stop_words and len(word) > 2])
-
-# Créer et afficher le nuage de mots
-if word_freq:
-    wordcloud = WordCloud(
-        width=800, 
-        height=400, 
-        background_color='white',
-        colormap='Reds',
-        max_words=100
-    ).generate_from_frequencies(word_freq)
-    
-    plt.figure(figsize=(10, 5))
-    plt.imshow(wordcloud, interpolation='bilinear')
-    plt.axis('off')
-    st.pyplot(plt)
 
 # Verbatims représentatifs
 st.markdown('<div class="sub-header">Verbatims Représentatifs</div>', unsafe_allow_html=True)
